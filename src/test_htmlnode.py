@@ -12,3 +12,8 @@ class TestHTMLNode(unittest.TestCase):
     def test_props_to_html(self):
         node = HTMLNode(tag="p", value="Hello, world!", children=[], props={"href": "https://www.google.com", "target": "_blank",})
         self.assertEqual(node.__props_to_html__(node.props), ' href="https://www.google.com" target="_blank"')
+        
+    def test_repr(self):
+        node = HTMLNode(tag="p", value="Hello, world!", children=[], props={"href": "https://www.google.com", "target": "_blank",})
+        self.assertEqual(repr(node), "HTMLNode(p, Hello, world!, [], {'href': 'https://www.google.com', 'target': '_blank'})")
+            
