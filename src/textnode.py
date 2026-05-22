@@ -1,20 +1,27 @@
+from enum import Enum
+
+
+class TextType(Enum):
+    TEXT = "text"
+    BOLD = "bold"
+    ITALIC = "italic"
+    CODE = "code"
+    LINK = "link"
+    IMAGE = "image"
+
+
 class TextNode:
-    def __init__(self, text, type, url=None):
+    def __init__(self, text, text_type, url=None):
         self.text = text
-        self.text_type = type
+        self.text_type = text_type
         self.url = url
 
     def __eq__(self, other):
-        if not isinstance(other, TextNode):
-            return False
         return (
-            getattr(self, "text", None) == getattr(other, "text", None)
-            and getattr(self, "text_type", None) == getattr(other, "text_type", None)
-            and getattr(self, "url", None) == getattr(other, "url", None)
+            self.text_type == other.text_type
+            and self.text == other.text
+            and self.url == other.url
         )
 
     def __repr__(self):
-        text = "" if self.text is None else str(self.text)
-        text_type = "" if self.text_type is None else str(self.text_type)
-        url = "" if self.url is None else str(self.url)
-        return f"TextNode({text}, {text_type}, {url})"
+        return f"TextNode({self.text}, {self.text_type.value}, {self.url})"
