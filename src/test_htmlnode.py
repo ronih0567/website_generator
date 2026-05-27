@@ -11,7 +11,7 @@ class TestHTMLNode(unittest.TestCase):
     
     def test_props_to_html(self):
         node = HTMLNode(tag="p", value="Hello, world!", children=[], props={"href": "https://www.google.com", "target": "_blank",})
-        self.assertEqual(node.__props_to_html__(node.props), ' href="https://www.google.com" target="_blank"')
+        self.assertEqual(node.props_to_html(), ' href="https://www.google.com" target="_blank"')
         
     def test_repr(self):
         node = HTMLNode(tag="p", value="Hello, world!", children=[], props={"href": "https://www.google.com", "target": "_blank",})
@@ -19,19 +19,19 @@ class TestHTMLNode(unittest.TestCase):
         
     def test_leaf_to_html_p(self):
         node = LeafNode("p", "Hello, world!")
-        self.assertEqual(node.__to_html__(), "<p>Hello, world!</p>")
+        self.assertEqual(node.to_html(), "<p>Hello, world!</p>")
         
     def test_leaf_to_html_a(self):
         node = LeafNode("a", "Click me!", props={"href": "https://www.google.com"})
-        self.assertEqual(node.__to_html__(), '<a href="https://www.google.com">Click me!</a>')
+        self.assertEqual(node.to_html(), '<a href="https://www.google.com">Click me!</a>')
         
     def test_leaf_to_html_i(self):
         node = LeafNode("i", "Italic text!")
-        self.assertEqual(node.__to_html__(), "<i>Italic text!</i>")
+        self.assertEqual(node.to_html(), "<i>Italic text!</i>")
         
     def test_leaf_to_html_b(self):
         node = LeafNode("b", "Bold text!")
-        self.assertEqual(node.__to_html__(), "<b>Bold text!</b>")
+        self.assertEqual(node.to_html(), "<b>Bold text!</b>")
         
     def test_to_html_with_children(self):
         child_node = LeafNode("span", "child")
