@@ -12,8 +12,7 @@ class HTMLNode:
         if self.props is None:
             return ""
         output_html = ""
-        for entry in self.props:
-            key, value = entry
+        for key, value in self.props.items():
             output_html += f' {key}="{value}"'
         
         return output_html
