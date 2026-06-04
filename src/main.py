@@ -1,3 +1,5 @@
+import re
+
 from textnode import TextNode, TextType
 from htmlnode import LeafNode
 
@@ -23,18 +25,31 @@ def split_nodes_delimiter(old_nodes: list[TextNode], delimiter: str, text_type: 
         if node.text_type != TextType.TEXT:
             new_nodes.append(node)
             continue
-        else:
-            split_text = node.text.split(delimiter)
-            for i, text in enumerate(split_text):
-                if i > 0:
-                    new_nodes.append(TextNode(delimiter, text_type))
+
+        split_text = node.text.split(delimiter)
+        if len(split_text) % 2 == 0:
+            raise ValueError(f"invalid markdown syntax, unmatched delimiter: {delimiter}")
+
+        for i, text in enumerate(split_text):
+            if text == "":
+                continue
+            if i % 2 == 0:
+                new_nodes.append(TextNode(text, TextType.TEXT))
+            else:
                 new_nodes.append(TextNode(text, text_type))
-        
+
     return new_nodes
+
+def extract_markdown_images(text):
+    return re.findall(r"!\[([^\[\]]*)\]\(([^\(\)]*)\)", text)
+
+def extract_markdown_links(text):
+    return re.findall(r"(?<!!)\[([^\[\]]*)\]\(([^\(\)]*)\)", text)
 
 def main():
     node = TextNode("This is some anchor text", TextType.LINK, "https://www.boot.dev")
     print(node)
 
 
-main()
+if __name__ == "__main__":
+    main()
