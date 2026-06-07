@@ -312,7 +312,7 @@ This is the same paragraph on yet another new line
 - Peas porrige in the pot
 - Nine days old"""
         blocks = markdown_to_blocks(md)
-        print(f"blocks: {blocks}")
+        #print(f"blocks: {blocks}")
         self.assertEqual(
             blocks,
             [
@@ -327,6 +327,7 @@ This is the same paragraph on yet another new line
 
 
 
+
 This is another paragraph with `code` here, **bold text** here
 and _italic text_ here
 
@@ -335,7 +336,7 @@ and _italic text_ here
 - Spam spam eggs and spam
 - Spam spam spam eggs and spam"""
         blocks = markdown_to_blocks(md)
-        print(f"blocks: {blocks}")
+        #print(f"blocks: {blocks}")
         self.assertEqual(
             blocks,
             [

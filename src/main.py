@@ -84,12 +84,9 @@ def text_to_textnodes(text):
     link_nodes = split_nodes_link(image_nodes)
     return link_nodes
 
-def markdown_to_blocks(markdown): # check AI generated code
+def markdown_to_blocks(markdown):
     blocks = markdown.split('\n\n')
-    for block in blocks:
-        block = block.strip()
-        if block == "":
-            blocks.remove(block)
+    blocks = [block.strip() for block in blocks if block.strip()]
     return blocks
 
 def main():
