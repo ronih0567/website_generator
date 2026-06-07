@@ -7,6 +7,7 @@ from src.main import (
     split_nodes_link,
     text_to_textnodes,
     text_node_to_html_node,
+    markdown_to_blocks,
 )
 from textnode import TextNode, TextType
 
@@ -276,6 +277,71 @@ class TestTextNode(unittest.TestCase):
                 TextNode("img", TextType.IMAGE, "https://example.com/img.png"),
                 TextNode(" ", TextType.TEXT),
                 TextNode("link", TextType.LINK, "https://example.com"),
+            ],
+        )
+
+    def test1_markdown_to_blocks(self):
+        md = """This is a **bolded** paragraph
+
+This is another paragraph with _italic_ text and `code` here
+This is the same paragraph on a new line
+
+- This is a list
+- with items"""
+        blocks = markdown_to_blocks(md)
+        # print(f"blocks: {blocks}")
+        self.assertEqual(
+            blocks,
+            [
+                "This is a **bolded** paragraph",
+                "This is another paragraph with _italic_ text and `code` here\nThis is the same paragraph on a new line",
+                "- This is a list\n- with items",
+            ],
+        )
+        
+    def test2_markdown_to_blocks(self):
+        md = """This is an _italicized_ paragraph
+
+This is another paragraph with `code` here and **bold text** here
+This is the same paragraph on a new line
+This is the same paragraph on yet another new line
+
+- This is a list
+- Peas porrige hot
+- Peas porrige cold
+- Peas porrige in the pot
+- Nine days old"""
+        blocks = markdown_to_blocks(md)
+        print(f"blocks: {blocks}")
+        self.assertEqual(
+            blocks,
+            [
+                "This is an _italicized_ paragraph",
+                "This is another paragraph with `code` here and **bold text** here\nThis is the same paragraph on a new line\nThis is the same paragraph on yet another new line",
+                "- This is a list\n- Peas porrige hot\n- Peas porrige cold\n- Peas porrige in the pot\n- Nine days old",
+            ],
+        )
+        
+    def test3_markdown_to_blocks(self):
+        md = """The next block should be removed due to being empty
+
+
+
+This is another paragraph with `code` here, **bold text** here
+and _italic text_ here
+
+- Another list
+- Spam
+- Spam spam eggs and spam
+- Spam spam spam eggs and spam"""
+        blocks = markdown_to_blocks(md)
+        print(f"blocks: {blocks}")
+        self.assertEqual(
+            blocks,
+            [
+                "The next block should be removed due to being empty",
+                "This is another paragraph with `code` here, **bold text** here\nand _italic text_ here",
+                "- Another list\n- Spam\n- Spam spam eggs and spam\n- Spam spam spam eggs and spam",
             ],
         )
 

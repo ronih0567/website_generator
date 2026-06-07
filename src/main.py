@@ -1,7 +1,7 @@
 import re
 
 from textnode import TextNode, TextType
-from htmlnode import LeafNode
+from htmlnode import ParentNode, LeafNode
 
 def text_node_to_html_node(text_node):
     if text_node.text_type == TextType.TEXT:
@@ -83,6 +83,14 @@ def text_to_textnodes(text):
     image_nodes = split_nodes_image(code_nodes)
     link_nodes = split_nodes_link(image_nodes)
     return link_nodes
+
+def markdown_to_blocks(markdown): # check AI generated code
+    blocks = markdown.split('\n\n')
+    for block in blocks:
+        block = block.strip()
+        if block == "":
+            blocks.remove(block)
+    return blocks
 
 def main():
     node = TextNode("This is some anchor text", TextType.LINK, "https://www.boot.dev")
