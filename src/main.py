@@ -40,17 +40,17 @@ def split_nodes_delimiter(old_nodes: list[TextNode], delimiter: str, text_type: 
 
     return new_nodes
 
-def extract_markdown_images(text):
-    return re.findall(r"!\[([^\[\]]*)\]\(([^\(\)]*)\)", text)
-
-def extract_markdown_links(text):
-    return re.findall(r"(?<!!)\[([^\[\]]*)\]\(([^\(\)]*)\)", text)
-
 def split_nodes_image(old_nodes: list[TextNode]) -> list[TextNode]:
     return split_nodes_markdown(old_nodes, extract_markdown_images, TextType.IMAGE, "!")
 
 def split_nodes_link(old_nodes: list[TextNode]) -> list[TextNode]:
     return split_nodes_markdown(old_nodes, extract_markdown_links, TextType.LINK)
+
+def extract_markdown_images(text):
+    return re.findall(r"!\[([^\[\]]*)\]\(([^\(\)]*)\)", text)
+
+def extract_markdown_links(text):
+    return re.findall(r"(?<!!)\[([^\[\]]*)\]\(([^\(\)]*)\)", text)
 
 def split_nodes_markdown(old_nodes, extractor, text_type, prefix=""):
     new_nodes = []
@@ -73,6 +73,11 @@ def split_nodes_markdown(old_nodes, extractor, text_type, prefix=""):
             new_nodes.append(TextNode(remaining_text, TextType.TEXT))
 
     return new_nodes
+
+def text_to_textnodes(text):
+    textnodes = []
+    textnodes.append(TextNode(text, TextType.TEXT))
+    return textnodes
 
 def main():
     node = TextNode("This is some anchor text", TextType.LINK, "https://www.boot.dev")
