@@ -77,7 +77,12 @@ def split_nodes_markdown(old_nodes, extractor, text_type, prefix=""):
 def text_to_textnodes(text):
     textnodes = []
     textnodes.append(TextNode(text, TextType.TEXT))
-    return textnodes
+    bold_nodes = split_nodes_delimiter(textnodes, "**", TextType.BOLD)
+    italic_nodes = split_nodes_delimiter(bold_nodes, "_", TextType.ITALIC)
+    code_nodes = split_nodes_delimiter(italic_nodes, "`", TextType.CODE)
+    image_nodes = split_nodes_image(code_nodes)
+    link_nodes = split_nodes_link(image_nodes)
+    return link_nodes
 
 def main():
     node = TextNode("This is some anchor text", TextType.LINK, "https://www.boot.dev")

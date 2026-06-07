@@ -5,6 +5,7 @@ from src.main import (
     split_nodes_delimiter,
     split_nodes_image,
     split_nodes_link,
+    text_to_textnodes,
     text_node_to_html_node,
 )
 from textnode import TextNode, TextType
@@ -210,6 +211,73 @@ class TestTextNode(unittest.TestCase):
             ],
             new_nodes,
     )
+
+    def test_text_to_textnodes_plain_text(self):
+        self.assertEqual(
+            text_to_textnodes("This is plain text"),
+            [TextNode("This is plain text", TextType.TEXT)],
+        )
+
+    def test_text_to_textnodes_bold(self):
+        self.assertEqual(
+            text_to_textnodes("This has **bold** text"),
+            [
+                TextNode("This has ", TextType.TEXT),
+                TextNode("bold", TextType.BOLD),
+                TextNode(" text", TextType.TEXT),
+            ],
+        )
+
+    def test_text_to_textnodes_bold_and_italic(self):
+        self.assertEqual(
+            text_to_textnodes("This has **bold** and _italic_ text"),
+            [
+                TextNode("This has ", TextType.TEXT),
+                TextNode("bold", TextType.BOLD),
+                TextNode(" and ", TextType.TEXT),
+                TextNode("italic", TextType.ITALIC),
+                TextNode(" text", TextType.TEXT),
+            ],
+        )
+
+    def test_text_to_textnodes_code_and_link(self):
+        self.assertEqual(
+            text_to_textnodes("Run `python3 main.py` then visit [Boot.dev](https://www.boot.dev)"),
+            [
+                TextNode("Run ", TextType.TEXT),
+                TextNode("python3 main.py", TextType.CODE),
+                TextNode(" then visit ", TextType.TEXT),
+                TextNode("Boot.dev", TextType.LINK, "https://www.boot.dev"),
+            ],
+        )
+
+    def test_text_to_textnodes_image_and_link(self):
+        self.assertEqual(
+            text_to_textnodes("See ![logo](https://example.com/logo.png) and [site](https://example.com)"),
+            [
+                TextNode("See ", TextType.TEXT),
+                TextNode("logo", TextType.IMAGE, "https://example.com/logo.png"),
+                TextNode(" and ", TextType.TEXT),
+                TextNode("site", TextType.LINK, "https://example.com"),
+            ],
+        )
+
+    def test_text_to_textnodes_all_types(self):
+        self.assertEqual(
+            text_to_textnodes("A **bold** _italic_ `code` ![img](https://example.com/img.png) [link](https://example.com)"),
+            [
+                TextNode("A ", TextType.TEXT),
+                TextNode("bold", TextType.BOLD),
+                TextNode(" ", TextType.TEXT),
+                TextNode("italic", TextType.ITALIC),
+                TextNode(" ", TextType.TEXT),
+                TextNode("code", TextType.CODE),
+                TextNode(" ", TextType.TEXT),
+                TextNode("img", TextType.IMAGE, "https://example.com/img.png"),
+                TextNode(" ", TextType.TEXT),
+                TextNode("link", TextType.LINK, "https://example.com"),
+            ],
+        )
 
 if __name__ == "__main__":
     unittest.main()
