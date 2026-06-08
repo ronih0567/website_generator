@@ -95,17 +95,17 @@ def markdown_to_blocks(markdown):
 def block_to_block_type(block):
     match = re.match(r'^(#{1,6})\s+(.*)$', block) # TRUE if it finds headings w 1-6 leading # symbols
     if match:
-        return BlockType.HEADING, match.group(2).strip()
-    elif block.startswith("```") and block.endswith("```"):
-        return BlockType.CODE, block[3:-3].strip()
+        return BlockType.HEADING
+    elif block.startswith("```\n") and block.endswith("```"):
+        return BlockType.CODE
     elif block.startswith(">"):
-        return BlockType.QUOTE, block[1:].strip()
+        return BlockType.QUOTE
     elif re.match(r"^\d+\.\s", block):
-        return BlockType.ORDERED_LIST, re.sub(r"^\d+\.\s", "", block).strip()
+        return BlockType.ORDERED_LIST
     elif block.startswith("- "):
-        return BlockType.UNORDERED_LIST, block[2:].strip()
+        return BlockType.UNORDERED_LIST
     else:
-        return BlockType.PARAGRAPH, block.strip()
+        return BlockType.PARAGRAPH
 
 def main():
     node = TextNode("This is some anchor text", TextType.LINK, "https://www.boot.dev")
