@@ -1,6 +1,6 @@
 import re
 
-from textnode import TextNode, TextType
+from textnode import TextNode, TextType, BlockType
 from htmlnode import ParentNode, LeafNode
 
 def text_node_to_html_node(text_node):
@@ -92,10 +92,24 @@ def markdown_to_blocks(markdown):
     # print(f"blocks after stripping: {blocks}")  # Debugging line
     return blocks
 
+def block_to_block_type(block):
+    match = re.match(r'^(#{1,6})\s+(.*)$', block) # TRUE if it finds headings w 1-6 leading # symbols
+    if match:
+        return BlockType.HEADING, match.group(2).strip()
+    elif block.startswith("```") and block.endswith("```"):
+        return BlockType.CODE, block[3:-3].strip()
+    elif block.startswith(">"):
+        return BlockType.QUOTE, block[1:].strip()
+    elif re.match(r"^\d+\.\s", block):
+        return BlockType.ORDERED_LIST, re.sub(r"^\d+\.\s", "", block).strip()
+    elif block.startswith("- "):
+        return BlockType.UNORDERED_LIST, block[2:].strip()
+    else:
+        return BlockType.PARAGRAPH, block.strip()
+
 def main():
     node = TextNode("This is some anchor text", TextType.LINK, "https://www.boot.dev")
     print(node)
-
 
 if __name__ == "__main__":
     main()
