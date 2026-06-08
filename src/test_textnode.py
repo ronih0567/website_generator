@@ -8,8 +8,9 @@ from src.main import (
     text_to_textnodes,
     text_node_to_html_node,
     markdown_to_blocks,
+    block_to_block_type,
 )
-from textnode import TextNode, TextType
+from textnode import TextNode, TextType, BlockType
 
 class TestTextNode(unittest.TestCase):
     def test_eq(self):
@@ -345,6 +346,21 @@ and _italic text_ here
                 "- Another list\n- Spam\n- Spam spam eggs and spam\n- Spam spam spam eggs and spam",
             ],
         )
+
+    def test_block_to_block_type(self):
+        self.assertEqual(block_to_block_type("This is a paragraph"), BlockType.PARAGRAPH)
+        self.assertEqual(block_to_block_type("# Heading 1"), BlockType.HEADING)
+        self.assertEqual(block_to_block_type("## Heading 2"), BlockType.HEADING)
+        self.assertEqual(block_to_block_type("### Heading 3"), BlockType.HEADING)
+        self.assertEqual(block_to_block_type("#### Heading 4"), BlockType.HEADING)
+        self.assertEqual(block_to_block_type("##### Heading 5"), BlockType.HEADING)
+        self.assertEqual(block_to_block_type("###### Heading 6"), BlockType.HEADING)
+        self.assertEqual(block_to_block_type("> This is a quote"), BlockType.QUOTE)
+        self.assertEqual(block_to_block_type("- List item"), BlockType.UNORDERED_LIST)
+        self.assertEqual(block_to_block_type("1. List item"), BlockType.ORDERED_LIST)
+        self.assertEqual(block_to_block_type("2. List item"), BlockType.ORDERED_LIST)
+        self.assertEqual(block_to_block_type("```\ncode block\n```"), BlockType.CODE)
+        
 
 if __name__ == "__main__":
     unittest.main()
