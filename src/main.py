@@ -93,7 +93,7 @@ def markdown_to_blocks(markdown):
     return blocks
 
 def block_to_block_type(block):
-    match = re.match(r'^(#{1,6})\s+(.*)$', block) # TRUE if it finds headings w 1-6 leading # symbols
+    match = re.match(r'^(#{1,6})\s+(.*)$', block)
     if match:
         return BlockType.HEADING
     elif block.startswith("```\n") and block.endswith("```"):
@@ -106,6 +106,127 @@ def block_to_block_type(block):
         return BlockType.UNORDERED_LIST
     else:
         return BlockType.PARAGRAPH
+
+
+def text_to_children(text):
+    return [text_node_to_html_node(node) for node in text_to_textnodes(text)]
+
+
+def get_heading_level(block):
+    match = re.match(r'^(#{1,6})\s+', block)
+    return len(match.group(1)) if match else 1
+
+
+def strip_heading_markers(block):
+    return re.sub(r'^(#{1,6})\s+', '', block).strip()
+
+
+def build_heading_node(block):
+    heading_text = strip_heading_markers(block)
+    heading_level = get_heading_level(block)
+    return ParentNode(f"h{heading_level}", text_to_children(heading_text))
+
+
+def build_paragraph_node(block):
+    return ParentNode("p", text_to_children(block))
+
+
+def build_quote_node(block):
+    quote_text = re.sub(r'^>\s?', '', block).strip()
+    return ParentNode("blockquote", text_to_children(quote_text))
+
+
+def parse_list_block(block):
+    items = []
+    for line in block.split("\n"):
+        if not line.strip():
+            continue
+        indent = len(re.match(r'^( *)', line).group(1))
+        stripped = line[indent:]
+        ordered_match = re.match(r'^(\d+)\.\s+(.*)$', stripped)
+        if ordered_match:
+            text = ordered_match.group(2).strip()
+            ordered = True
+        else:
+            unordered_match = re.match(r'^[-+*]\s+(.*)$', stripped)
+            if unordered_match:
+                text = unordered_match.group(1).strip()
+                ordered = False
+            else:
+                continue
+        items.append({
+            "indent": indent,
+            "text": text,
+            "ordered": ordered,
+            "children": [],
+        })
+    return items
+
+
+def build_nested_list_tree(items):
+    root = {"indent": -1, "ordered": False, "children": []}
+    stack = [root]
+    for item in items:
+        while stack and item["indent"] <= stack[-1]["indent"]:
+            stack.pop()
+        stack[-1]["children"].append(item)
+        stack.append(item)
+    return root["children"]
+
+
+def build_list_node(block, ordered):
+    items = parse_list_block(block)
+    nested_items = build_nested_list_tree(items)
+
+    def build_list(nodes, ordered_type):
+        children = []
+        for node in nodes:
+            li_children = text_to_children(node["text"])
+            if node["children"]:
+                nested = build_list(node["children"], node["ordered"])
+                li_children.append(nested)
+            children.append(ParentNode("li", li_children))
+        tag = "ol" if ordered_type else "ul"
+        return ParentNode(tag, children)
+
+    return build_list(nested_items, ordered)
+
+
+def build_unordered_list_node(block):
+    return build_list_node(block, ordered=False)
+
+
+def build_ordered_list_node(block):
+    return build_list_node(block, ordered=True)
+
+
+def build_code_node(block):
+    code_text = block[3:-3].strip() if block.startswith("```") and block.endswith("```") else block.strip()
+    return ParentNode("pre", [text_node_to_html_node(TextNode(code_text, TextType.CODE))])
+
+
+def build_block_node(block):
+    block_type = block_to_block_type(block)
+    if block_type == BlockType.HEADING:
+        return build_heading_node(block)
+    if block_type == BlockType.PARAGRAPH:
+        return build_paragraph_node(block)
+    if block_type == BlockType.QUOTE:
+        return build_quote_node(block)
+    if block_type == BlockType.UNORDERED_LIST:
+        return build_unordered_list_node(block)
+    if block_type == BlockType.ORDERED_LIST:
+        return build_ordered_list_node(block)
+    if block_type == BlockType.CODE:
+        return build_code_node(block)
+    raise ValueError(f"Unsupported block type: {block_type}")
+
+
+def markdown_to_html_node(markdown):
+    blocks = markdown_to_blocks(markdown)
+    block_nodes = [build_block_node(block) for block in blocks]
+    return ParentNode("div", block_nodes)
+
 
 def main():
     node = TextNode("This is some anchor text", TextType.LINK, "https://www.boot.dev")

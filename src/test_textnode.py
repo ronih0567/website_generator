@@ -8,6 +8,7 @@ from src.main import (
     text_to_textnodes,
     text_node_to_html_node,
     markdown_to_blocks,
+    markdown_to_html_node,
     block_to_block_type,
 )
 from textnode import TextNode, TextType, BlockType
@@ -360,7 +361,29 @@ and _italic text_ here
         self.assertEqual(block_to_block_type("1. List item"), BlockType.ORDERED_LIST)
         self.assertEqual(block_to_block_type("2. List item"), BlockType.ORDERED_LIST)
         self.assertEqual(block_to_block_type("```\ncode block\n```"), BlockType.CODE)
-        
+        self.assertEqual(block_to_block_type("####### Too many hashes"), BlockType.PARAGRAPH)
+
+    def test_markdown_to_html_node(self):
+        html_root = markdown_to_html_node("# Heading 1\n\nHello **world**")
+        self.assertEqual(html_root.tag, "div")
+        self.assertEqual(html_root.children[0].tag, "h1")
+        self.assertEqual(html_root.children[0].children[0].value, "Heading 1")
+        self.assertEqual(html_root.children[1].tag, "p")
+        self.assertEqual(html_root.children[1].children[0].value, "Hello ")
+        self.assertEqual(html_root.children[1].children[1].tag, "b")
+        self.assertEqual(html_root.children[1].children[1].value, "world")
+
+    def test_markdown_to_html_node_nested_list(self):
+        html_root = markdown_to_html_node("- item 1\n  - nested 1\n  - nested 2\n- item 2")
+        self.assertEqual(html_root.tag, "div")
+        self.assertEqual(html_root.children[0].tag, "ul")
+        self.assertEqual(html_root.children[0].children[0].tag, "li")
+        self.assertEqual(html_root.children[0].children[0].children[0].value, "item 1")
+        self.assertEqual(html_root.children[0].children[0].children[1].tag, "ul")
+        self.assertEqual(html_root.children[0].children[0].children[1].children[0].tag, "li")
+        self.assertEqual(html_root.children[0].children[0].children[1].children[0].children[0].value, "nested 1")
+        self.assertEqual(html_root.children[0].children[1].children[0].value, "item 2")
+
 
 if __name__ == "__main__":
     unittest.main()
