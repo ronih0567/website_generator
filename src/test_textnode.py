@@ -1,5 +1,16 @@
+import sys
+import tempfile
+from pathlib import Path
 import unittest
+
+workspace_root = Path(__file__).resolve().parents[1]
+src_root = workspace_root / "src"
+sys.path.insert(0, str(src_root))
+sys.path.insert(0, str(workspace_root))
+
 from src.main import (
+    clear_directory,
+    copy_directory_recursive,
     extract_markdown_images,
     extract_markdown_links,
     split_nodes_delimiter,
@@ -383,6 +394,33 @@ and _italic text_ here
         self.assertEqual(html_root.children[0].children[0].children[1].children[0].tag, "li")
         self.assertEqual(html_root.children[0].children[0].children[1].children[0].children[0].value, "nested 1")
         self.assertEqual(html_root.children[0].children[1].children[0].value, "item 2")
+
+    def test_copy_directory_recursive_cleans_and_copies(self):
+        with tempfile.TemporaryDirectory() as src_dir, tempfile.TemporaryDirectory() as dst_dir:
+            src_path = Path(src_dir)
+            dst_path = Path(dst_dir)
+
+            # create source tree
+            (src_path / "subdir").mkdir()
+            file_a = src_path / "a.txt"
+            file_b = src_path / "subdir" / "b.txt"
+            file_a.write_text("hello")
+            file_b.write_text("world")
+
+            # create existing destination content that should be removed
+            existing = dst_path / "old.txt"
+            existing.write_text("remove me")
+
+            clear_directory(dst_path)
+            self.assertFalse(existing.exists())
+
+            copy_directory_recursive(src_path, dst_path)
+
+            self.assertTrue((dst_path / "a.txt").exists())
+            self.assertTrue((dst_path / "subdir").is_dir())
+            self.assertTrue((dst_path / "subdir" / "b.txt").exists())
+            self.assertEqual((dst_path / "a.txt").read_text(), "hello")
+            self.assertEqual((dst_path / "subdir" / "b.txt").read_text(), "world")
 
 
 if __name__ == "__main__":

@@ -1,4 +1,7 @@
+import os
 import re
+import shutil
+from pathlib import Path
 
 from textnode import TextNode, TextType, BlockType
 from htmlnode import ParentNode, LeafNode
@@ -228,7 +231,41 @@ def markdown_to_html_node(markdown):
     return ParentNode("div", block_nodes)
 
 
+def clear_directory(path):
+    if not path.exists():
+        return
+    for child in path.iterdir():
+        if child.is_dir():
+            shutil.rmtree(child)
+        else:
+            child.unlink()
+
+
+def copy_directory_recursive(src, dst):
+    if not src.exists():
+        raise FileNotFoundError(f"Source directory does not exist: {src}")
+    if not dst.exists():
+        dst.mkdir(parents=True, exist_ok=True)
+
+    for item in src.iterdir():
+        dst_item = dst / item.name
+        if item.is_dir():
+            dst_item.mkdir(parents=True, exist_ok=True)
+            copy_directory_recursive(item, dst_item)
+        else:
+            shutil.copy2(item, dst_item)
+            print(f"Copied file: {dst_item}")
+
+
 def main():
+    source = Path(__file__).resolve().parents[1] / "static"
+    destination = Path(__file__).resolve().parents[1] / "public"
+
+    print(f"Cleaning destination directory: {destination}")
+    clear_directory(destination)
+    print(f"Copying contents from {source} to {destination}")
+    copy_directory_recursive(source, destination)
+
     node = TextNode("This is some anchor text", TextType.LINK, "https://www.boot.dev")
     print(node)
 
