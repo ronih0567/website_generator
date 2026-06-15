@@ -104,6 +104,28 @@ def extract_title(markdown):
     raise Exception("No h1 header found in markdown")
 
 
+def generate_page(from_path, template_path, dest_path):
+    from_path = Path(from_path)
+    template_path = Path(template_path)
+    dest_path = Path(dest_path)
+
+    print(f"Generating page from {from_path} to {dest_path} using {template_path}")
+
+    markdown = from_path.read_text(encoding="utf-8")
+    template = template_path.read_text(encoding="utf-8")
+
+    html_node = markdown_to_html_node(markdown)
+    content_html = html_node.to_html()
+    title = extract_title(markdown)
+
+    output_html = template.replace("{{ Title }}", title).replace("{{ Content }}", content_html)
+
+    dest_path.parent.mkdir(parents=True, exist_ok=True)
+    dest_path.write_text(output_html, encoding="utf-8")
+
+    return dest_path
+
+
 def block_to_block_type(block):
     match = re.match(r'^(#{1,6})\s+(.*)$', block)
     if match:
@@ -274,6 +296,12 @@ def main():
     clear_directory(destination)
     print(f"Copying contents from {source} to {destination}")
     copy_directory_recursive(source, destination)
+
+    content_source = Path(__file__).resolve().parents[1] / "content" / "index.md"
+    template_source = Path(__file__).resolve().parents[1] / "template.html"
+    destination_page = destination / "index.html"
+
+    generate_page(content_source, template_source, destination_page)
 
     node = TextNode("This is some anchor text", TextType.LINK, "https://www.boot.dev")
     print(node)

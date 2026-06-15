@@ -26,7 +26,12 @@ class LeafNode(HTMLNode):
         
     def to_html(self):
         if self.value is None:
-            return ValueError("Leaf nodes must have a value")
+            if self.tag is None:
+                return ""
+            if self.tag.lower() == "img":
+                props_html = self.props_to_html() if self.props else ""
+                return f"<{self.tag}{props_html} />"
+            raise ValueError("Leaf nodes must have a value")
         elif self.tag is None:
             return str(self.value)
         else:

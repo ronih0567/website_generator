@@ -14,6 +14,8 @@ from src.main import (
     extract_markdown_images,
     extract_markdown_links,
     extract_title,
+    generate_page,
+    main,
     split_nodes_delimiter,
     split_nodes_image,
     split_nodes_link,
@@ -394,6 +396,63 @@ and _italic text_ here
     def test_extract_title_missing_h1_raises(self):
         with self.assertRaises(Exception):
             extract_title("## Not H1\nSome content")
+
+    def test_generate_page_writes_html(self):
+        with tempfile.TemporaryDirectory() as work_dir:
+            work_path = Path(work_dir)
+            source = work_path / "source.md"
+            template = work_path / "template.html"
+            dest = work_path / "output.html"
+
+            source.write_text("# Test Page\n\nHello **world**", encoding="utf-8")
+            template.write_text(
+                "<html><head><title>{{ Title }}</title></head><body>{{ Content }}</body></html>",
+                encoding="utf-8",
+            )
+
+            generate_page(source, template, dest)
+
+            output = dest.read_text(encoding="utf-8")
+            self.assertIn("<title>Test Page</title>", output)
+            self.assertIn("<b>world</b>", output)
+            self.assertIn("<body>", output)
+            self.assertTrue(dest.exists())
+
+    def test_main_integration_generates_public_site(self):
+        with tempfile.TemporaryDirectory() as work_dir:
+            work_path = Path(work_dir)
+            src_path = work_path / "src"
+            content_path = work_path / "content"
+            static_path = work_path / "static"
+            public_path = work_path / "public"
+            src_path.mkdir(parents=True)
+            content_path.mkdir(parents=True)
+            static_path.mkdir(parents=True)
+
+            # Create the fake module file path used by main()
+            fake_main_file = src_path / "main.py"
+            fake_main_file.write_text("", encoding="utf-8")
+
+            # Create source markdown, template, and static assets
+            (content_path / "index.md").write_text("# Integration Page\n\nHello **integration**", encoding="utf-8")
+            (work_path / "template.html").write_text(
+                "<html><head><title>{{ Title }}</title></head><body>{{ Content }}</body></html>",
+                encoding="utf-8",
+            )
+            (static_path / "test.css").write_text("body { background: #fff; }", encoding="utf-8")
+
+            original_file = sys.modules["src.main"].__file__
+            try:
+                sys.modules["src.main"].__file__ = str(fake_main_file)
+                main()
+            finally:
+                sys.modules["src.main"].__file__ = original_file
+
+            self.assertTrue((public_path / "index.html").exists())
+            self.assertTrue((public_path / "test.css").exists())
+            generated = (public_path / "index.html").read_text(encoding="utf-8")
+            self.assertIn("<title>Integration Page</title>", generated)
+            self.assertIn("<strong>integration</strong>", generated.replace("<b>", "<strong>").replace("</b>", "</strong>"))
 
     def test_markdown_to_html_node_nested_list(self):
         html_root = markdown_to_html_node("- item 1\n  - nested 1\n  - nested 2\n- item 2")
