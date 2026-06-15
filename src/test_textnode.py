@@ -13,6 +13,7 @@ from src.main import (
     copy_directory_recursive,
     extract_markdown_images,
     extract_markdown_links,
+    extract_title,
     split_nodes_delimiter,
     split_nodes_image,
     split_nodes_link,
@@ -383,6 +384,16 @@ and _italic text_ here
         self.assertEqual(html_root.children[1].children[0].value, "Hello ")
         self.assertEqual(html_root.children[1].children[1].tag, "b")
         self.assertEqual(html_root.children[1].children[1].value, "world")
+
+    def test_extract_title_h1(self):
+        self.assertEqual(extract_title("# Hello World\nSome content"), "Hello World")
+
+    def test_extract_title_h1_with_whitespace(self):
+        self.assertEqual(extract_title("#   Hello World   \nMore content"), "Hello World")
+
+    def test_extract_title_missing_h1_raises(self):
+        with self.assertRaises(Exception):
+            extract_title("## Not H1\nSome content")
 
     def test_markdown_to_html_node_nested_list(self):
         html_root = markdown_to_html_node("- item 1\n  - nested 1\n  - nested 2\n- item 2")
