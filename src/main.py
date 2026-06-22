@@ -275,7 +275,10 @@ def clear_directory(path):
 def copy_directory_recursive(src, dst):
     if not src.exists():
         raise FileNotFoundError(f"Source directory does not exist: {src}")
-    if not dst.exists():
+
+    if dst.exists():
+        clear_directory(dst)
+    else:
         dst.mkdir(parents=True, exist_ok=True)
 
     for item in src.iterdir():

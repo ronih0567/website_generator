@@ -481,10 +481,9 @@ and _italic text_ here
             existing = dst_path / "old.txt"
             existing.write_text("remove me")
 
-            clear_directory(dst_path)
-            self.assertFalse(existing.exists())
-
             copy_directory_recursive(src_path, dst_path)
+
+            self.assertFalse(existing.exists())
 
             self.assertTrue((dst_path / "a.txt").exists())
             self.assertTrue((dst_path / "subdir").is_dir())
