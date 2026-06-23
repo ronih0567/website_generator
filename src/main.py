@@ -126,6 +126,22 @@ def generate_page(from_path, template_path, dest_path):
     return dest_path
 
 
+def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
+    dir_path_content = Path(dir_path_content)
+    template_path = Path(template_path)
+    dest_dir_path = Path(dest_dir_path)
+
+    for path in dir_path_content.rglob("*"):
+        if path.is_dir():
+            continue
+        if path.suffix != ".md":
+            continue
+
+        relative_path = path.relative_to(dir_path_content)
+        dest_path = dest_dir_path / relative_path.with_suffix(".html")
+        generate_page(path, template_path, dest_path)
+
+
 def block_to_block_type(block):
     match = re.match(r'^(#{1,6})\s+(.*)$', block)
     if match:
@@ -300,11 +316,10 @@ def main():
     print(f"Copying contents from {source} to {destination}")
     copy_directory_recursive(source, destination)
 
-    content_source = Path(__file__).resolve().parents[1] / "content" / "index.md"
+    content_source = Path(__file__).resolve().parents[1] / "content"
     template_source = Path(__file__).resolve().parents[1] / "template.html"
-    destination_page = destination / "index.html"
 
-    generate_page(content_source, template_source, destination_page)
+    generate_pages_recursive(content_source, template_source, destination)
 
     node = TextNode("This is some anchor text", TextType.LINK, "https://www.boot.dev")
     print(node)

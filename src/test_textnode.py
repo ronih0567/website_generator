@@ -15,6 +15,7 @@ from src.main import (
     extract_markdown_links,
     extract_title,
     generate_page,
+    generate_pages_recursive,
     main,
     split_nodes_delimiter,
     split_nodes_image,
@@ -417,6 +418,28 @@ and _italic text_ here
             self.assertIn("<b>world</b>", output)
             self.assertIn("<body>", output)
             self.assertTrue(dest.exists())
+
+    def test_generate_pages_recursive_writes_nested_html(self):
+        with tempfile.TemporaryDirectory() as work_dir:
+            work_path = Path(work_dir)
+            content_path = work_path / "content"
+            public_path = work_path / "public"
+            template_path = work_path / "template.html"
+
+            (content_path / "blog" / "post").mkdir(parents=True)
+            (content_path / "index.md").write_text("# Home\n\nHello", encoding="utf-8")
+            (content_path / "blog" / "post" / "index.md").write_text("# Post\n\nWorld", encoding="utf-8")
+            template_path.write_text(
+                "<html><head><title>{{ Title }}</title></head><body>{{ Content }}</body></html>",
+                encoding="utf-8",
+            )
+
+            generate_pages_recursive(content_path, template_path, public_path)
+
+            self.assertTrue((public_path / "index.html").exists())
+            self.assertTrue((public_path / "blog" / "post" / "index.html").exists())
+            self.assertIn("<title>Home</title>", (public_path / "index.html").read_text(encoding="utf-8"))
+            self.assertIn("<title>Post</title>", (public_path / "blog" / "post" / "index.html").read_text(encoding="utf-8"))
 
     def test_main_integration_generates_public_site(self):
         with tempfile.TemporaryDirectory() as work_dir:
