@@ -1,6 +1,7 @@
 import os
 import re
 import shutil
+import sys
 from pathlib import Path
 
 from textnode import TextNode, TextType, BlockType
@@ -104,10 +105,22 @@ def extract_title(markdown):
     raise Exception("No h1 header found in markdown")
 
 
-def generate_page(from_path, template_path, dest_path):
+def normalize_basepath(basepath):
+    if basepath is None:
+        return "/"
+    basepath = basepath.strip()
+    if not basepath or basepath == "/":
+        return "/"
+    if not basepath.startswith("/"):
+        basepath = f"/{basepath}"
+    return basepath.rstrip("/")
+
+
+def generate_page(from_path, template_path, dest_path, basepath="/"):
     from_path = Path(from_path)
     template_path = Path(template_path)
     dest_path = Path(dest_path)
+    basepath = normalize_basepath(basepath)
 
     print(f"Generating page from {from_path} to {dest_path} using {template_path}")
 
@@ -119,6 +132,9 @@ def generate_page(from_path, template_path, dest_path):
     title = extract_title(markdown)
 
     output_html = template.replace("{{ Title }}", title).replace("{{ Content }}", content_html)
+    if basepath != "/":
+        output_html = output_html.replace('href="/', f'href="{basepath}/')
+        output_html = output_html.replace('src="/', f'src="{basepath}/')
 
     dest_path.parent.mkdir(parents=True, exist_ok=True)
     dest_path.write_text(output_html, encoding="utf-8")
@@ -126,7 +142,7 @@ def generate_page(from_path, template_path, dest_path):
     return dest_path
 
 
-def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
+def generate_pages_recursive(dir_path_content, template_path, dest_dir_path, basepath="/"):
     dir_path_content = Path(dir_path_content)
     template_path = Path(template_path)
     dest_dir_path = Path(dest_dir_path)
@@ -139,7 +155,7 @@ def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
 
         relative_path = path.relative_to(dir_path_content)
         dest_path = dest_dir_path / relative_path.with_suffix(".html")
-        generate_page(path, template_path, dest_path)
+        generate_page(path, template_path, dest_path, basepath=basepath)
 
 
 def block_to_block_type(block):
@@ -308,8 +324,9 @@ def copy_directory_recursive(src, dst):
 
 
 def main():
+    basepath = sys.argv[1] if len(sys.argv) > 1 else "/"
     source = Path(__file__).resolve().parents[1] / "static"
-    destination = Path(__file__).resolve().parents[1] / "public"
+    destination = Path(__file__).resolve().parents[1] / "docs"
 
     print(f"Cleaning destination directory: {destination}")
     clear_directory(destination)
@@ -319,7 +336,7 @@ def main():
     content_source = Path(__file__).resolve().parents[1] / "content"
     template_source = Path(__file__).resolve().parents[1] / "template.html"
 
-    generate_pages_recursive(content_source, template_source, destination)
+    generate_pages_recursive(content_source, template_source, destination, basepath=basepath)
 
     node = TextNode("This is some anchor text", TextType.LINK, "https://www.boot.dev")
     print(node)

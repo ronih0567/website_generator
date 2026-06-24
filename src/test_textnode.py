@@ -419,6 +419,25 @@ and _italic text_ here
             self.assertIn("<body>", output)
             self.assertTrue(dest.exists())
 
+    def test_generate_page_prefixes_root_relative_urls_with_basepath(self):
+        with tempfile.TemporaryDirectory() as work_dir:
+            work_path = Path(work_dir)
+            source = work_path / "source.md"
+            template = work_path / "template.html"
+            dest = work_path / "output.html"
+
+            source.write_text("# Test Page\n\nHello", encoding="utf-8")
+            template.write_text(
+                '<html><body><a href="/about">About</a><img src="/img.png" /></body></html>',
+                encoding="utf-8",
+            )
+
+            generate_page(source, template, dest, basepath="/site")
+
+            output = dest.read_text(encoding="utf-8")
+            self.assertIn('href="/site/about"', output)
+            self.assertIn('src="/site/img.png"', output)
+
     def test_generate_pages_recursive_writes_nested_html(self):
         with tempfile.TemporaryDirectory() as work_dir:
             work_path = Path(work_dir)
